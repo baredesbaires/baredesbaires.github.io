@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galería El Puente</title>
+<!-- Ícono y nombre al anclar la página a la pantalla de inicio del celular -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="/el-puente/favicon-32.png">
+<link rel="apple-touch-icon" href="/el-puente/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="El Puente">
+<meta name="theme-color" content="#18233a">
+<style>html,body{margin:0;height:100%;background:#f3f4f7}iframe{border:0;width:100%;height:100%;display:block}</style>
+</head>
+<body>
+<!-- Muestra el reporte (Apps Script) dentro de esta página: así no aparece el cartel gris de Google.
+     Si se entra desde el botón del mail (?t=...), se lo pasa al reporte para entrar sin código. -->
+<iframe id="r" title="Reporte de Galería El Puente" allow="clipboard-write"></iframe>
+<script>
+var base = "https://script.google.com/macros/s/AKfycbwy3TPXI9hCuFiBh6gpDzQN_sHketjbJRVwFYjMiCF8S-HHv-QMxAmhF2wFc_-VNwaQ/exec?g=el-puente";
+var t = new URLSearchParams(location.search).get("t");
+document.getElementById("r").src = base + (t ? "&t=" + encodeURIComponent(t) : "");
+if (t) history.replaceState(null, "", location.pathname);
+</script>
+</body>
+</html>
