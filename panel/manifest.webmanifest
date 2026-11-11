@@ -1,6 +1,6 @@
 {
-  "name": "Panel Baredes Baires",
-  "short_name": "Panel BB",
+  "name": "Reporte B&B",
+  "short_name": "Reporte B&B",
   "start_url": "/panel/",
   "scope": "/panel/",
   "display": "standalone",
