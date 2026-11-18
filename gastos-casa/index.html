@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gastos de casa</title>
+<!-- Ícono y nombre al anclar la página a la pantalla de inicio del celular -->
+<link rel="manifest" id="mf" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="/gastos-casa/favicon-32.png?v=1">
+<link rel="apple-touch-icon" href="/gastos-casa/apple-touch-icon.png?v=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gastos">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<!-- Vista previa al compartir el link (WhatsApp, etc.) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gastos de casa">
+<meta property="og:description" content="Cuánto se gasta en casa y en qué">
+<meta property="og:url" content="https://baredesbaires.github.io/gastos-casa/">
+<meta property="og:image" content="https://baredesbaires.github.io/gastos-casa/icono-512.png?v=1">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta name="theme-color" content="#f5f3f8">
+<style>html,body{margin:0;height:100%;background:#f5f3f8}iframe{border:0;width:100%;height:100%;display:block}</style>
+</head>
+<body>
+<!-- Muestra la app (Apps Script) dentro de esta página: así no aparece el cartel gris de Google.
+     Cada familia entra con su link ?f=CLAVE; se recuerda en el celular para el ícono de inicio. -->
+<iframe id="app" title="Gastos de casa" allow="clipboard-write"></iframe>
+<script>
+var base = "https://script.google.com/macros/s/AKfycbywQ52EETfGvpPM1aI6lKQhsosZO7wLOVnlRzYfveymsVrhZ4E8LUc_JbgAHaCh6vyF/exec";
+var f = new URLSearchParams(location.search).get("f");
+try { if (f) localStorage.setItem("gc_f", f); else f = localStorage.getItem("gc_f"); } catch (e) {}
+document.getElementById("app").src = base + (f ? "?f=" + encodeURIComponent(f) : "");
+if (f) {
+  // El ícono de inicio tiene que abrir la app de ESTA familia
+  var raiz = location.origin + "/gastos-casa/";
+  var m = {
+    name: "Gastos de casa", short_name: "Gastos", start_url: raiz + "?f=" + f, scope: raiz,
+    display: "standalone", background_color: "#f5f3f8", theme_color: "#f5f3f8",
+    icons: [
+      { src: raiz + "icono-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
+      { src: raiz + "icono-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" }
+    ]
+  };
+  document.getElementById("mf").href = "data:application/manifest+json," + encodeURIComponent(JSON.stringify(m));
+  if (!new URLSearchParams(location.search).get("f")) history.replaceState(null, "", "?f=" + f);
+}
+</script>
+</body>
+</html>
