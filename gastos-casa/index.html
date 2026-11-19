@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Gastos de casa</title>
-<!-- Ícono y nombre al anclar la página a la pantalla de inicio del celular -->
-<link rel="manifest" id="mf" href="manifest.webmanifest">
+<!-- Ícono y nombre al anclar la página a la pantalla de inicio del celular.
+     El manifest se arma más abajo SOLO con la clave de la familia: si hubiera uno fijo sin clave,
+     el ícono de inicio abriría la app sin clave (modo ejemplo). Pasó con el iPhone de Lolo, 19/11. -->
 <link rel="icon" type="image/png" sizes="32x32" href="/gastos-casa/favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="/gastos-casa/apple-touch-icon.png?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -43,7 +44,10 @@ if (f) {
       { src: raiz + "icono-512.png?v=3", sizes: "512x512", type: "image/png", purpose: "any maskable" }
     ]
   };
-  document.getElementById("mf").href = "data:application/manifest+json," + encodeURIComponent(JSON.stringify(m));
+  var mf = document.createElement("link");
+  mf.rel = "manifest";
+  mf.href = "data:application/manifest+json," + encodeURIComponent(JSON.stringify(m));
+  document.head.appendChild(mf);
   if (!new URLSearchParams(location.search).get("f")) history.replaceState(null, "", "?f=" + f);
 }
 </script>
