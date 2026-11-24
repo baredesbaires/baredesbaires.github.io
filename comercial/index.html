@@ -78,7 +78,11 @@ function sacarToken() {
   if (!SW || !PUEDE) return;
   SW.then(function (reg) {
     if (!reg) return;
-    return firebase.messaging().getToken({ vapidKey: VAPID, serviceWorkerRegistration: reg }).then(function (tk) {
+    var msg = firebase.messaging();
+    // Una vez por celular se descarta el código viejo y se pide uno nuevo (el primero quedó inválido cuando
+    // Android tenía bloqueadas las notificaciones de Chrome)
+    var antes = leer("bb_push_renovado") === "2" ? Promise.resolve() : msg.deleteToken().catch(function () {});
+    return antes.then(function () { guardar("bb_push_renovado", "2"); return msg.getToken({ vapidKey: VAPID, serviceWorkerRegistration: reg }); }).then(function (tk) {
       if (tk) { TOKEN_PUSH = tk; pasarToken(); }
     });
   }).catch(function (e) { console.log("avisos", e); });
