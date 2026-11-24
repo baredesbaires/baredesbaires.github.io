@@ -19,31 +19,100 @@
 <meta property="og:image:width" content="512">
 <meta property="og:image:height" content="512">
 <meta name="theme-color" content="#f3f4f1">
-<style>html,body{margin:0;height:100%;background:#f3f4f1}iframe{border:0;width:100%;height:100%;display:block}</style>
+<style>
+html,body{margin:0;height:100%;background:#f3f4f1}
+iframe{border:0;width:100%;height:100%;display:block}
+#avisos{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));max-width:420px;margin:0 auto;box-sizing:border-box;
+  background:#fff;border:1px solid #dfe2dd;border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,.16);padding:14px 16px;
+  font-family:"Source Sans 3","Segoe UI",Arial,sans-serif;font-size:15px;color:#1d2321;line-height:1.4}
+#avisos[hidden],#avisos button[hidden]{display:none}
+#avisos b{display:block;font-family:Archivo,Arial,sans-serif;font-size:16px;margin-bottom:2px}
+#avisos p{margin:0;color:#5f6864}
+#avisos .bt{display:flex;gap:8px;margin-top:12px}
+#avisos button{flex:1;font:inherit;font-weight:600;font-size:15px;border-radius:10px;padding:10px;cursor:pointer;border:1px solid #dfe2dd;background:#fff;color:#1e3a5f}
+#avisos button.p{background:#1e3a5f;border-color:#1e3a5f;color:#fff}
+</style>
 </head>
 <body>
 <!-- La app (Apps Script) va adentro de esta página: sin el cartel gris de Google. La sesión (6 meses) se guarda acá,
      en el celular, y se le pasa a la app. Si se entra con el botón del mail (?t=...), la app abre la sesión sola. -->
 <iframe id="app" title="Comercial" allow="clipboard-write; web-share; camera; geolocation"></iframe>
+<div id="avisos" hidden>
+  <b>Avisos en el celular</b>
+  <p id="avtxt"></p>
+  <div class="bt"><button type="button" id="avno">Ahora no</button><button type="button" class="p" id="avsi">Activar</button></div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbx-edr4XcF9oDi5JGilTMuy40aLVUfAtGWXlzPpWvG1BUfhp0JfJZz7fIkvtBT2HNi1iw/exec?app=1";
 var CLAVE = "bb_comercial_sesion";
-function leer() { try { return localStorage.getItem(CLAVE) || ""; } catch (e) { return ""; } }
-function guardar(v) { try { v ? localStorage.setItem(CLAVE, v) : localStorage.removeItem(CLAVE); } catch (e) {} }
+var VAPID = "BJCSl86dh0kruY4OUVx7gveUDW2ZhwbAh5SI7bNfSAmvdETLT2d0eGcfKqjY3j95dKUA_ICD9TBZEqguQeXRWv0";
+var $ = function (id) { return document.getElementById(id); };
+function leer(k) { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } }
+function guardar(k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) {} }
 function abrir(s, t) {
-  document.getElementById("app").src = BASE + (s ? "&s=" + encodeURIComponent(s) : "") + (t ? "&t=" + encodeURIComponent(t) : "");
+  $("app").src = BASE + (s ? "&s=" + encodeURIComponent(s) : "") + (t ? "&t=" + encodeURIComponent(t) : "");
 }
+
+// ---------- Avisos (notificaciones, Firebase) ----------
+// El permiso se pide desde acá (la app de adentro no puede). El código del celular se le pasa a la app,
+// que lo anota a nombre de quien entró (hoja PUSH del puente).
+var APP = null, ORIGEN = "", TOKEN_PUSH = "";
+var ua = navigator.userAgent;
+var IOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+var INSTALADA = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+var PLAT = IOS ? "iPhone" : /Android/.test(ua) ? "Android" : "Compu";
+var PUEDE = "serviceWorker" in navigator && "Notification" in window && "PushManager" in window;
+var SW = "serviceWorker" in navigator ? navigator.serviceWorker.register("firebase-messaging-sw.js").catch(function () { return null; }) : null;
+try {
+  firebase.initializeApp({
+    apiKey: "AIzaSyBS8gyhkNHOWTRttdne8yX_d9lyVT99IPk", authDomain: "baredes-comercial.firebaseapp.com", projectId: "baredes-comercial",
+    storageBucket: "baredes-comercial.firebasestorage.app", messagingSenderId: "838138326116", appId: "1:838138326116:web:0b0c94d4dcf5f83a968371"
+  });
+} catch (e) { PUEDE = false; }
+function pasarToken() {
+  if (APP && TOKEN_PUSH) try { APP.postMessage({ tipo: "push", token: TOKEN_PUSH, plat: PLAT }, ORIGEN); } catch (e) {}
+}
+function sacarToken() {
+  if (!SW || !PUEDE) return;
+  SW.then(function (reg) {
+    if (!reg) return;
+    return firebase.messaging().getToken({ vapidKey: VAPID, serviceWorkerRegistration: reg }).then(function (tk) {
+      if (tk) { TOKEN_PUSH = tk; pasarToken(); }
+    });
+  }).catch(function (e) { console.log("avisos", e); });
+}
+function mostrarCartel() {
+  if (!leer(CLAVE) || Number(leer("bb_avisos_no")) > Date.now()) return;
+  if (IOS && !INSTALADA) {
+    $("avtxt").textContent = "Para recibir avisos en el iPhone, instalá la app: tocá Compartir y después “Agregar a inicio”.";
+    $("avsi").hidden = true; $("avno").textContent = "Entendido";
+  } else if (PUEDE && Notification.permission === "default") {
+    $("avtxt").textContent = "Te avisamos de firmas atrasadas, interesados y novedades.";
+  } else return;
+  $("avisos").hidden = false;
+}
+$("avno").onclick = function () { guardar("bb_avisos_no", String(Date.now() + 7 * 864e5)); $("avisos").hidden = true; };
+$("avsi").onclick = function () {
+  $("avisos").hidden = true;
+  Notification.requestPermission().then(function (p) { if (p === "granted") sacarToken(); });
+};
+if (PUEDE && Notification.permission === "granted" && leer(CLAVE)) sacarToken();
+setTimeout(mostrarCartel, 2500);
+
 window.addEventListener("message", function (e) {
   var h = "";
   try { h = new URL(e.origin).hostname; } catch (err) { return; }
   if (!/\.googleusercontent\.com$/.test(h) && h !== "script.google.com") return;
   var d = e.data || {};
-  if (d.tipo === "sesion" && d.token) { guardar(d.token); abrir(d.token); }
-  if (d.tipo === "salir") { guardar(""); abrir(""); }
+  if (d.tipo === "listo") { APP = e.source; ORIGEN = e.origin; pasarToken(); }
+  if (d.tipo === "sesion" && d.token) { guardar(CLAVE, d.token); abrir(d.token); setTimeout(mostrarCartel, 4000); }
+  if (d.tipo === "salir") { guardar(CLAVE, ""); abrir(""); }
 });
 var t = new URLSearchParams(location.search).get("t");
 if (t) history.replaceState(null, "", location.pathname);
-abrir(t ? "" : leer(), t);
+abrir(t ? "" : leer(CLAVE), t);
 </script>
 </body>
 </html>
