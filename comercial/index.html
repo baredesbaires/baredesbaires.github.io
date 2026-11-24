@@ -115,7 +115,7 @@ if (PUEDE) try {
   firebase.messaging().onMessage(function (p) {
     var n = p.notification || {};
     SW && SW.then(function (reg) {
-      if (reg) reg.showNotification(n.title || "Comercial", { body: n.body || "", badge: "/comercial/badge-96.png" });
+      if (reg) reg.showNotification(n.title || "Comercial", { body: n.body || "", badge: "/comercial/badge-96.png", icon: "/comercial/icono-192.png?v=2" });
     });
   });
 } catch (e) {}
