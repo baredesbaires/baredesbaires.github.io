@@ -71,6 +71,14 @@ try {
     storageBucket: "baredes-comercial.firebasestorage.app", messagingSenderId: "838138326116", appId: "1:838138326116:web:0b0c94d4dcf5f83a968371"
   });
 } catch (e) { PUEDE = false; }
+var RENOVADO = false;
+function renovarToken() {
+  if (!SW || !PUEDE) return;
+  var msg = firebase.messaging();
+  msg.deleteToken().catch(function () {}).then(function () { return SW; }).then(function (reg) {
+    if (reg) return msg.getToken({ vapidKey: VAPID, serviceWorkerRegistration: reg });
+  }).then(function (tk) { if (tk) { TOKEN_PUSH = tk; pasarToken(); } }).catch(function (e) { console.log("avisos", e); });
+}
 function pasarToken() {
   if (APP && TOKEN_PUSH) try { APP.postMessage({ tipo: "push", token: TOKEN_PUSH, plat: PLAT }, ORIGEN); } catch (e) {}
 }
@@ -119,6 +127,8 @@ window.addEventListener("message", function (e) {
   if (!/\.googleusercontent\.com$/.test(h) && h !== "script.google.com") return;
   var d = e.data || {};
   if (d.tipo === "listo") { APP = e.source; ORIGEN = e.origin; pasarToken(); }
+  // El código que tenía guardado el celular ya no sirve: se descarta y se pide uno nuevo (una vez por apertura)
+  if (d.tipo === "renovarPush" && !RENOVADO) { RENOVADO = true; renovarToken(); }
   if (d.tipo === "sesion" && d.token) { guardar(CLAVE, d.token); abrir(d.token); setTimeout(mostrarCartel, 4000); }
   if (d.tipo === "salir") { guardar(CLAVE, ""); abrir(""); }
 });
