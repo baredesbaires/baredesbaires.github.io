@@ -6,8 +6,8 @@
 <title>Comercial · Baredes Baires</title>
 <!-- Se instala en el celular como app ("Agregar a la pantalla de inicio"): ícono, nombre y pantalla completa -->
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="32x32" href="/comercial/favicon-32.png?v=1">
-<link rel="apple-touch-icon" href="/comercial/apple-touch-icon.png?v=1">
+<link rel="icon" type="image/png" sizes="32x32" href="/comercial/favicon-32.png?v=2">
+<link rel="apple-touch-icon" href="/comercial/apple-touch-icon.png?v=2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Comercial">
@@ -15,7 +15,7 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Baredes Baires Comercial">
 <meta property="og:url" content="https://baredesbaires.github.io/comercial/">
-<meta property="og:image" content="https://baredesbaires.github.io/comercial/icono-512.png?v=1">
+<meta property="og:image" content="https://baredesbaires.github.io/comercial/icono-512.png?v=2">
 <meta property="og:image:width" content="512">
 <meta property="og:image:height" content="512">
 <meta name="theme-color" content="#f3f4f1">
@@ -25,7 +25,7 @@ iframe{border:0;width:100%;height:100%;display:block}
 #avisos{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));max-width:420px;margin:0 auto;box-sizing:border-box;
   background:#fff;border:1px solid #dfe2dd;border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,.16);padding:14px 16px;
   font-family:"Source Sans 3","Segoe UI",Arial,sans-serif;font-size:15px;color:#1d2321;line-height:1.4}
-#avisos[hidden],#avisos button[hidden]{display:none}
+#avisos[hidden],#avisos button[hidden],#avisos p[hidden]{display:none}
 #avisos b{display:block;font-family:Archivo,Arial,sans-serif;font-size:16px;margin-bottom:2px}
 #avisos p{margin:0;color:#5f6864}
 #avisos .bt{display:flex;gap:8px;margin-top:12px}
@@ -38,8 +38,8 @@ iframe{border:0;width:100%;height:100%;display:block}
      en el celular, y se le pasa a la app. Si se entra con el botón del mail (?t=...), la app abre la sesión sola. -->
 <iframe id="app" title="Comercial" allow="clipboard-write; web-share; camera; geolocation"></iframe>
 <div id="avisos" hidden>
-  <b>Avisos en el celular</b>
-  <p id="avtxt"></p>
+  <b id="avtit">Activar notificaciones</b>
+  <p id="avtxt" hidden></p>
   <div class="bt"><button type="button" id="avno">Ahora no</button><button type="button" class="p" id="avsi">Activar</button></div>
 </div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -86,11 +86,10 @@ function sacarToken() {
 function mostrarCartel() {
   if (!leer(CLAVE) || Number(leer("bb_avisos_no")) > Date.now()) return;
   if (IOS && !INSTALADA) {
-    $("avtxt").textContent = "Para recibir avisos en el iPhone, instalá la app: tocá Compartir y después “Agregar a inicio”.";
+    $("avtit").textContent = "Notificaciones";
+    $("avtxt").textContent = "Para recibirlas en el iPhone, instalá la app: tocá Compartir y después “Agregar a inicio”."; $("avtxt").hidden = false;
     $("avsi").hidden = true; $("avno").textContent = "Entendido";
-  } else if (PUEDE && Notification.permission === "default") {
-    $("avtxt").textContent = "Te avisamos de firmas atrasadas, interesados y novedades.";
-  } else return;
+  } else if (!(PUEDE && Notification.permission === "default")) return;
   $("avisos").hidden = false;
 }
 $("avno").onclick = function () { guardar("bb_avisos_no", String(Date.now() + 7 * 864e5)); $("avisos").hidden = true; };
@@ -99,6 +98,15 @@ $("avsi").onclick = function () {
   Notification.requestPermission().then(function (p) { if (p === "granted") sacarToken(); });
 };
 if (PUEDE && Notification.permission === "granted" && leer(CLAVE)) sacarToken();
+// Con la app abierta Firebase no muestra la notificación sola: se muestra acá igual
+if (PUEDE) try {
+  firebase.messaging().onMessage(function (p) {
+    var n = p.notification || {};
+    SW && SW.then(function (reg) {
+      if (reg) reg.showNotification(n.title || "Comercial", { body: n.body || "", icon: n.icon || "/comercial/icono-192.png?v=2" });
+    });
+  });
+} catch (e) {}
 setTimeout(mostrarCartel, 2500);
 
 window.addEventListener("message", function (e) {
