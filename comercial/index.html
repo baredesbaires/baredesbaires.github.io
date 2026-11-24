@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Comercial · Baredes Baires</title>
+<!-- Se instala en el celular como app ("Agregar a la pantalla de inicio"): ícono, nombre y pantalla completa -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="/comercial/favicon-32.png?v=1">
+<link rel="apple-touch-icon" href="/comercial/apple-touch-icon.png?v=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Comercial">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Baredes Baires Comercial">
+<meta property="og:url" content="https://baredesbaires.github.io/comercial/">
+<meta property="og:image" content="https://baredesbaires.github.io/comercial/icono-512.png?v=1">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta name="theme-color" content="#f3f4f1">
+<style>html,body{margin:0;height:100%;background:#f3f4f1}iframe{border:0;width:100%;height:100%;display:block}</style>
+</head>
+<body>
+<!-- La app (Apps Script) va adentro de esta página: sin el cartel gris de Google. La sesión (6 meses) se guarda acá,
+     en el celular, y se le pasa a la app. Si se entra con el botón del mail (?t=...), la app abre la sesión sola. -->
+<iframe id="app" title="Comercial" allow="clipboard-write; web-share; camera; geolocation"></iframe>
+<script>
+var BASE = "https://script.google.com/macros/s/AKfycbx-edr4XcF9oDi5JGilTMuy40aLVUfAtGWXlzPpWvG1BUfhp0JfJZz7fIkvtBT2HNi1iw/exec?app=1";
+var CLAVE = "bb_comercial_sesion";
+function leer() { try { return localStorage.getItem(CLAVE) || ""; } catch (e) { return ""; } }
+function guardar(v) { try { v ? localStorage.setItem(CLAVE, v) : localStorage.removeItem(CLAVE); } catch (e) {} }
+function abrir(s, t) {
+  document.getElementById("app").src = BASE + (s ? "&s=" + encodeURIComponent(s) : "") + (t ? "&t=" + encodeURIComponent(t) : "");
+}
+window.addEventListener("message", function (e) {
+  var h = "";
+  try { h = new URL(e.origin).hostname; } catch (err) { return; }
+  if (!/\.googleusercontent\.com$/.test(h) && h !== "script.google.com") return;
+  var d = e.data || {};
+  if (d.tipo === "sesion" && d.token) { guardar(d.token); abrir(d.token); }
+  if (d.tipo === "salir") { guardar(""); abrir(""); }
+});
+var t = new URLSearchParams(location.search).get("t");
+if (t) history.replaceState(null, "", location.pathname);
+abrir(t ? "" : leer(), t);
+</script>
+</body>
+</html>

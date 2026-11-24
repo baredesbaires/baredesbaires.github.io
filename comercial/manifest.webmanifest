@@ -1,0 +1,13 @@
+{
+  "name": "Baredes Baires Comercial",
+  "short_name": "Comercial",
+  "start_url": "/comercial/",
+  "scope": "/comercial/",
+  "display": "standalone",
+  "background_color": "#f3f4f1",
+  "theme_color": "#1e3a5f",
+  "icons": [
+    { "src": "/comercial/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/comercial/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
